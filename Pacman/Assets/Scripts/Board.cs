@@ -10,8 +10,13 @@ public class Board : MonoBehaviour
     {
         foreach(Tile tile in Tiles)
         {
-            _board[(int)tile.transform.localPosition.x, (int)tile.transform.localPosition.y] = tile;
+            _board[(int)tile.transform.position.x, (int)tile.transform.position.y] = tile;
         }
         print("board initialized");
+    }
+
+    public Tile GetTile(Vector2 position)
+    {
+        return _board[Mathf.FloorToInt(position.x), Mathf.FloorToInt(position.y)];
     }
 }

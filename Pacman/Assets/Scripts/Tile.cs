@@ -43,4 +43,17 @@ public class Tile : MonoBehaviour
             }
         }
     }
+
+    public Tile CheckForValidDirection(Vector2 direction)
+    {
+        for (int i = 0; i< _validDirections.Length; i++)
+        {
+            if (_validDirections[i] == direction) return NeighboorNodes[i];
+        }
+        for (int i = 0; i < _pmValidDirections.Length; i++)
+        {
+            if (_pmValidDirections[i] == direction) return PMNeighboorNodes[i];
+        }
+        return null;
+    }
 }
