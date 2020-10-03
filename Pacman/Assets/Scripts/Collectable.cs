@@ -7,7 +7,7 @@ public enum CollectableType
     Fruit = 2,
 }
 
-public class Collectable : MonoBehaviour
+public class Collectable: MonoBehaviour
 {
     public CollectableType Type;
 }

@@ -5,13 +5,17 @@ public class Board : MonoBehaviour
 {
     private static int _boardWidth = 28, _boardLength = 31;
     private static Vector2[] _expansionVectors = new Vector2[] { Vector2.left, Vector2.right, Vector2.up, Vector2.down };
+
     public Tile[] Tiles;
+    public int DotCount;
+
     private Tile[,] _board = new Tile[_boardWidth, _boardLength];
     private List<Tile> _nodes;
     private List<Tile> _portals;
 
     private void Awake()
     {
+        _board = new Tile[_boardWidth, _boardLength];
         _nodes = new List<Tile>();
         _portals = new List<Tile>();
         foreach (Tile tile in Tiles)
@@ -23,6 +27,7 @@ public class Board : MonoBehaviour
                 _nodes.Add(tile);
                 _portals.Add(tile);
             }
+            if (tile.Collectable != null && tile.Collectable.Type != CollectableType.Fruit) DotCount++;
         }
         print("board initialized");
     }

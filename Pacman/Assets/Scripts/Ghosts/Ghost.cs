@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System;
 using UnityEngine;
 
@@ -28,8 +27,7 @@ public abstract class Ghost : MonoBehaviour
     [SerializeField]
     protected Board _board;
 
-    [SerializeField]
-    protected bool isEnabled;
+    public bool isEnabled;
     [SerializeField]
     protected bool isLeavingHouse;
     [SerializeField]
@@ -44,6 +42,7 @@ public abstract class Ghost : MonoBehaviour
     protected Tile _currentScatterNode; //The scatter node the ghost is aiming in scatter state
     protected int _currentScatterNodeIndex;
 
+    public int DotsBeforeRelease;
 
     protected Tile _previousNode;
     protected Tile _currentNode;
@@ -207,10 +206,13 @@ public abstract class Ghost : MonoBehaviour
                 }
                 _fixedPath = _board.GetPath(startingTile, _scatterPath[_currentScatterNodeIndex], currentNode: _noPreviousPath ? null : _currentNode, previousNode: _noPreviousPath ? null : _previousNode);
 
-                _previousNode = _fixedPath[0];
-                _fixedPath.RemoveAt(0);
-                _currentNode = _fixedPath[0];
-                _fixedPath.RemoveAt(0);
+                if (_fixedPath[0] != _currentNode || startingTile != _previousNode)
+                {
+                    _previousNode = _fixedPath[0];
+                    _fixedPath.RemoveAt(0);
+                    _currentNode = _fixedPath[0];
+                    _fixedPath.RemoveAt(0);
+                }
 
                 DetermineDirection();
                 break;
@@ -236,10 +238,13 @@ public abstract class Ghost : MonoBehaviour
                     _fixedPath.Add(_leavingTiles[i]);
                 }
 
-                _previousNode = _fixedPath[0];
-                _fixedPath.RemoveAt(0);
-                _currentNode = _fixedPath[0];
-                _fixedPath.RemoveAt(0);
+                if (_fixedPath[0] != _currentNode || startingTile != _previousNode)
+                {
+                    _previousNode = _fixedPath[0];
+                    _fixedPath.RemoveAt(0);
+                    _currentNode = _fixedPath[0];
+                    _fixedPath.RemoveAt(0);
+                }
 
 
                 DetermineDirection();
@@ -270,34 +275,35 @@ public abstract class Ghost : MonoBehaviour
         SetGhostStateVisual();
     }
 
-    public void SetGhostState(GhostState state)
+    public void SetGhostState(GhostState state, bool endOfFright = false)
     {
         if ((int)state == (int)GhostState) return;
         switch (GhostState)
         {
             case GhostState.Scatter:
                 GhostState = state;
-                SetGhostStateVisual();
                 ReverseDirection();
+                SetGhostStateVisual();
                 break;
 
             case GhostState.Chase:
                 GhostState = state;
-                SetGhostStateVisual();
                 ReverseDirection();
-                if (state == GhostState.Scatter)
+                if (isEnabled && state == GhostState.Scatter)
                 {
                     CalculateNewPath();
                 }
+                SetGhostStateVisual();
                 break;
 
             case GhostState.Frightened:
+                if (state != GhostState.Respawning && !endOfFright) return;
                 GhostState = state;
-                SetGhostStateVisual();
-                if (state == GhostState.Scatter || state == GhostState.Respawning)
+                if (isEnabled && (state == GhostState.Scatter || state == GhostState.Respawning))
                 {
                     CalculateNewPath();
                 }
+                SetGhostStateVisual();
                 break;
         }
     }

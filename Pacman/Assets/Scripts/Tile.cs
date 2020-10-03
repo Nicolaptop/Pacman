@@ -16,7 +16,7 @@ public class Tile : MonoBehaviour
     public Tile[] NeighboorNodes;
     public Tile[] PMNeighboorNodes; // Special for some nodes where the ghost cant go up 
     public Tile ConnectedPortal;
-    public Collectable collectable;
+    public Collectable Collectable;
 
     private Vector2[] _validDirections;
     private Vector2[] _pmValidDirections;

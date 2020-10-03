@@ -7,9 +7,9 @@ public class PacMan : MonoBehaviour
     public Vector2 CurrentDirection;
 
     [SerializeField]
-    private Tile _previousNode;
+    private Tile _previousNode; // last node visited
     [SerializeField]
-    private Tile _currentNode;
+    private Tile _currentNode; // current node aimed
     private Tile _nextNode;
 
     private Vector2 _nextDirection;
@@ -54,7 +54,7 @@ public class PacMan : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.DownArrow)) wishedDirection = Vector2.down;
         if (wishedDirection != Vector2.zero && wishedDirection != CurrentDirection)
         {
-            if (wishedDirection == -1 * CurrentDirection)
+            if (wishedDirection == -1 * CurrentDirection) //opposite direction
             {
                 Tile tmpTile = _previousNode;
                 _previousNode = _currentNode;
