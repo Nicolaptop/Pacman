@@ -73,7 +73,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: dcb053ac67d343f4d9abbd50a1bd10ef, type: 3}
-  m_Color: {r: 0.10980393, g: 0.1254902, b: 0.8431373, a: 1}
+  m_Color: {r: 0, g: 0.010897016, b: 0.509434, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -98,4 +98,10 @@ MonoBehaviour:
   TileType: 0
   NeighboorNodes: []
   PMNeighboorNodes: []
+  ConnectedPortal: {fileID: 0}
   collectable: {fileID: 0}
+  GCost: 0
+  HCost: 0
+  FCost: 0
+  NeighbourTiles: []
+  ParentTile: {fileID: 0}

@@ -40,7 +40,7 @@ SpriteRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2810192827524111007}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -101,6 +101,11 @@ MonoBehaviour:
   PMNeighboorNodes: []
   ConnectedPortal: {fileID: 0}
   collectable: {fileID: 9131229825752939923}
+  GCost: 0
+  HCost: 0
+  FCost: 0
+  NeighbourTiles: []
+  ParentTile: {fileID: 0}
 --- !u!1 &4383520707572757674
 GameObject:
   m_ObjectHideFlags: 0
