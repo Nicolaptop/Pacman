@@ -38,7 +38,6 @@ public abstract class Ghost : MonoBehaviour
     protected int _currentleavingIndex;
     [SerializeField]
     protected Tile[] _scatterPath;
-    protected List<Tile> _fixedPath = new List<Tile>(); //Used when there is no need the redetermine a path
     protected Tile _currentScatterNode; //The scatter node the ghost is aiming in scatter state
     protected int _currentScatterNodeIndex;
 
@@ -51,14 +50,36 @@ public abstract class Ghost : MonoBehaviour
     public bool NeedsNewPath;  // means that the ghost needs a new direction from the pathfinding algorithm
     private bool _noPreviousPath;
 
+    private Vector3 _spawnPosition;
+
+    public virtual void Initialize() //Called at the start and restart of every level
+    {
+        _currentScatterNodeIndex = 0;
+        _currentleavingIndex = 0;
+        _currentScatterNode = _scatterPath[_currentScatterNodeIndex];
+        GhostState = GhostState.Scatter;
+        _previousNode = null;
+        _currentNode = null;
+        _currentDirection = Vector2.zero;
+        NeedsTeleportation = false;
+        NeedsNewPath = false;
+        _noPreviousPath = false;
+        transform.position = _spawnPosition;
+    }
     private void Awake()
     {
+        _spawnPosition = transform.position;
         _currentScatterNode = _scatterPath[_currentScatterNodeIndex];
     }
 
     public void Move(Tile ghostTile)
     {
         if (!isEnabled) return;
+        if (GhostState == GhostState.Respawning && ghostTile == _leavingTiles[_leavingTiles.Length - 1] && _previousNode != ghostTile) // Check for returning to ghosthome
+        {
+            _currentNode = ghostTile;
+            _currentleavingIndex = _leavingTiles.Length - 1;
+        }
         transform.position += (Vector3)(_currentDirection * BaseSpeed) * Time.deltaTime;
         if (CheckOverShot()) // Ghost overshot its target Node
         {
@@ -86,24 +107,34 @@ public abstract class Ghost : MonoBehaviour
 
             switch (GhostState)
             {
-                case GhostState.Scatter:
-                    _previousNode = _currentNode;
-
+                case GhostState.Scatter:  
                     if (_currentNode == _currentScatterNode) // Ghost is in a patrol movement
                     {
+                        _previousNode = _currentNode;
                         _currentScatterNodeIndex = (_currentScatterNodeIndex + 1) % _scatterPath.Length;
                         _currentScatterNode = _scatterPath[_currentScatterNodeIndex];
                         _currentNode = _currentScatterNode;
                     }
                     else // Ghost returns to his patrol path
                     {
-                        if (_currentNode.NeighboorNodes.Length == 1)// Only one case, TeleportPath
+                        if (_currentNode.TileType == TileType.Portal) NeedsTeleportation = true;
+                        else if (_currentNode.NeighboorNodes.Length > 2) NeedsNewPath = true; // case multiple possible paths
+                        else // 2 neighbors and the fact a ghost cant go back only gives one path possibility
                         {
-                            NeedsTeleportation = true;
-                            return;
+                            if (_currentNode.NeighboorNodes[0] == _previousNode) // prevents from going back
+                            {
+                                _previousNode = _currentNode;
+                                _currentNode = _currentNode.NeighboorNodes[1];
+                                DetermineDirection();
+                            }
+                            else if (_currentNode.NeighboorNodes[1] == _previousNode)
+                            {
+                                _previousNode = _currentNode;
+                                _currentNode = _currentNode.NeighboorNodes[0];
+                                DetermineDirection();
+                            }
+                            else NeedsNewPath = true;
                         }
-                        _currentNode = _fixedPath[0];
-                        _fixedPath.RemoveAt(0);
                     }
                     DetermineDirection();
                     break;
@@ -111,20 +142,21 @@ public abstract class Ghost : MonoBehaviour
                 case GhostState.Chase:
                     if (_currentNode.TileType == TileType.Portal) NeedsTeleportation = true;
                     else if (_currentNode.NeighboorNodes.Length > 2) NeedsNewPath = true; // case multiple possible paths
-                    else // 2 neighbors and the fact a ghost cant go back only gives one path possibility
+                    else // 2 neighbors and the fact a ghost cant go back only gives one path possibility  // In fact they are some 3ways node that alows the ghost to only walk one way
                     {
                         if (_currentNode.NeighboorNodes[0] == _previousNode) // prevents from going back
                         {
                             _previousNode = _currentNode;
                             _currentNode = _currentNode.NeighboorNodes[1];
+                            DetermineDirection();
                         }
-                        else
+                        else if (_currentNode.NeighboorNodes[1] == _previousNode)
                         {
                             _previousNode = _currentNode;
                             _currentNode = _currentNode.NeighboorNodes[0];
+                            DetermineDirection();
                         }
-
-                        DetermineDirection();
+                        else NeedsNewPath = true;
                     }
                     break;
 
@@ -136,14 +168,15 @@ public abstract class Ghost : MonoBehaviour
                         {
                             _previousNode = _currentNode;
                             _currentNode = _currentNode.NeighboorNodes[1];
+                            DetermineDirection();
                         }
-                        else
+                        else if (_currentNode.NeighboorNodes[1] == _previousNode)
                         {
                             _previousNode = _currentNode;
                             _currentNode = _currentNode.NeighboorNodes[0];
+                            DetermineDirection();
                         }
-
-                        DetermineDirection();
+                        else NeedsNewPath = true;
                     }
                     else
                     {
@@ -156,16 +189,36 @@ public abstract class Ghost : MonoBehaviour
                     break;
 
                 case GhostState.Respawning:
-                    if (_fixedPath.Count > 0)
+                    if (_currentNode == _leavingTiles[0])
                     {
+                        Respawn();
+                    }
+                    else if (_currentNode == _leavingTiles[_currentleavingIndex])
+                    {
+                        _currentleavingIndex--;
                         _previousNode = _currentNode;
-                        _currentNode = _fixedPath[0];
-                        _fixedPath.RemoveAt(0);
+                        _currentNode = _leavingTiles[_currentleavingIndex];
                         DetermineDirection();
                     }
                     else
                     {
-                        Respawn();
+                        if (_currentNode.TileType == TileType.Portal) NeedsTeleportation = true;
+                        else if (_currentNode.NeighboorNodes.Length > 2) NeedsNewPath = true; // case multiple possible paths
+                        else // 2 neighbors and the fact a ghost cant go back only gives one path possibility
+                        {
+                            if (_currentNode.NeighboorNodes[0] == _previousNode) // prevents from going back
+                            {
+                                _previousNode = _currentNode;
+                                _currentNode = _currentNode.NeighboorNodes[1];
+                            }
+                            else
+                            {
+                                _previousNode = _currentNode;
+                                _currentNode = _currentNode.NeighboorNodes[0];
+                            }
+
+                            DetermineDirection();
+                        }
                     }
                     break;
             }
@@ -195,24 +248,26 @@ public abstract class Ghost : MonoBehaviour
     {
         Tile startingTile = _board.GetTile(transform.position);
         Tile aimedTile;
+        List<Tile> tmpPath;
         switch (GhostState)
         {
             case GhostState.Scatter:
                 aimedTile = _scatterPath[_currentScatterNodeIndex];
+
                 if (aimedTile == startingTile)
                 {
                     _currentScatterNodeIndex = (_currentScatterNodeIndex + 1) % _scatterPath.Length;
-                    aimedTile = _scatterPath[_currentScatterNodeIndex];
+                    _previousNode = aimedTile;
+                    _currentNode = _scatterPath[_currentScatterNodeIndex];
+                    DetermineDirection();
+                    break;
                 }
-                _fixedPath = _board.GetPath(startingTile, _scatterPath[_currentScatterNodeIndex], currentNode: _noPreviousPath ? null : _currentNode, previousNode: _noPreviousPath ? null : _previousNode);
 
-                if (_fixedPath[0] != _currentNode || startingTile != _previousNode)
-                {
-                    _previousNode = _fixedPath[0];
-                    _fixedPath.RemoveAt(0);
-                    _currentNode = _fixedPath[0];
-                    _fixedPath.RemoveAt(0);
-                }
+                tmpPath = _board.GetPath(startingTile, aimedTile, currentNode: _noPreviousPath ? null : _currentNode, previousNode: _noPreviousPath ? null : _previousNode);
+
+                _previousNode = tmpPath[0];
+                tmpPath.RemoveAt(0);
+                _currentNode = tmpPath[0];
 
                 DetermineDirection();
                 break;
@@ -220,7 +275,7 @@ public abstract class Ghost : MonoBehaviour
             case GhostState.Chase:
                 aimedTile = DetermineNextTarget(args);
                 if (aimedTile == startingTile) aimedTile = _previousNode;
-                List<Tile> tmpPath = _board.GetPath(startingTile, aimedTile, currentNode: _noPreviousPath ? null : _currentNode, previousNode: _noPreviousPath ? null : _previousNode);
+                tmpPath = _board.GetPath(startingTile, aimedTile, currentNode: _noPreviousPath ? null : _currentNode, previousNode: _noPreviousPath ? null : _previousNode);
 
                 _previousNode = tmpPath[0];
                 tmpPath.RemoveAt(0);
@@ -230,22 +285,22 @@ public abstract class Ghost : MonoBehaviour
                 break;
 
             case GhostState.Respawning:
-                _fixedPath = _board.GetPath(startingTile, _leavingTiles[_leavingTiles.Length - 1], currentNode: _currentNode, previousNode: _previousNode);
+                aimedTile = _leavingTiles[_leavingTiles.Length - 1];
 
-                _fixedPath.RemoveAt(_fixedPath.Count - 1);
-                for (int i = _leavingTiles.Length - 1; i > -1; i--) // Add the inverse leaving ghost home path
+                if (startingTile == aimedTile)
                 {
-                    _fixedPath.Add(_leavingTiles[i]);
+                    _previousNode = aimedTile;
+                    _currentleavingIndex = _leavingTiles.Length - 2;
+                    _currentNode = _leavingTiles[_currentleavingIndex];
+                    DetermineDirection();
+                    break;
                 }
 
-                if (_fixedPath[0] != _currentNode || startingTile != _previousNode)
-                {
-                    _previousNode = _fixedPath[0];
-                    _fixedPath.RemoveAt(0);
-                    _currentNode = _fixedPath[0];
-                    _fixedPath.RemoveAt(0);
-                }
+                tmpPath = _board.GetPath(startingTile, aimedTile, currentNode: _noPreviousPath ? null : _currentNode, previousNode: _noPreviousPath ? null : _previousNode);
 
+                _previousNode = tmpPath[0];
+                tmpPath.RemoveAt(0);
+                _currentNode = tmpPath[0];
 
                 DetermineDirection();
                 break;
@@ -289,23 +344,17 @@ public abstract class Ghost : MonoBehaviour
             case GhostState.Chase:
                 GhostState = state;
                 ReverseDirection();
-                if (isEnabled && state == GhostState.Scatter)
-                {
-                    CalculateNewPath();
-                }
                 SetGhostStateVisual();
                 break;
 
             case GhostState.Frightened:
                 if (state != GhostState.Respawning && !endOfFright) return;
                 GhostState = state;
-                if (isEnabled && (state == GhostState.Scatter || state == GhostState.Respawning))
-                {
-                    CalculateNewPath();
-                }
                 SetGhostStateVisual();
                 break;
         }
+        NeedsNewPath = false;
+        NeedsTeleportation = false;
     }
 
     private void ReverseDirection()

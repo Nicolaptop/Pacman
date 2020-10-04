@@ -1,9 +1,11 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
     public float TimeBeforeStart;
+    public float TimeBeforeRestart;
     public GhostState CurrentGhostState;
 
     [SerializeField]
@@ -22,7 +24,10 @@ public class GameManager : MonoBehaviour
     private Text _textMessage = default;
 
     private float _levelStartTime;
+    private float _levelRestartTime;
     private bool _levelStarted = false;
+    private bool _levelRestarting = false;
+    private bool _gameOver = false;
     private Tile _pacmanTile;
     private Tile _blinkyTile;
     private Tile _clydeTile;
@@ -49,25 +54,87 @@ public class GameManager : MonoBehaviour
     private bool _permaChase;
     private bool _ongoingFright;
 
+    private IEnumerator Start()
+    {
+        _board.Initialize();
 
-    private void Awake()
+        yield return new WaitForSeconds(3);
+        _ghostTiles = new Tile[_ghosts.Length];
+        NewGame();
+    }
+
+    private void NewGame()
     {
         _score = 0;
         _scoreValue.text = _score.ToString();
+        _livesleft = 2;
         _livesLeftValue.text = _livesleft.ToString();
-        _textMessage.gameObject.SetActive(true);
-        _textMessage.text = LEVEL_START;
+        NewLevel();
+    }
 
-        _levelStartTime = Time.time;
-        _ghostTiles = new Tile[_ghosts.Length];
+    private void NewLevel()
+    {
+        _board.ResetBoard();
+        _pacman.Initialize();
+
         for (int i = 0; i < _ghosts.Length; i++)
         {
+            _ghosts[i].Initialize();
             _ghostTiles[i] = _board.GetTile(_ghosts[i].transform.position);
         }
+
+        _permaChase = false;
+        _ongoingFright = false;
+        _currentAlternance = 0;
+        _dotsLefts = _board.DotCount;
+        CurrentGhostState = GhostState.Scatter;
+
+        _textMessage.gameObject.SetActive(true);
+        _textMessage.text = LEVEL_START;
+        _levelStartTime = Time.time;
+        _levelStarted = false;
+    }
+
+    private void RestartLevel()
+    {
+        _pacman.Initialize();
+
+        for (int i = 0; i < _ghosts.Length; i++)
+        {
+            _ghosts[i].Initialize();
+            _ghostTiles[i] = _board.GetTile(_ghosts[i].transform.position);
+        }
+
+        _permaChase = false;
+        _ongoingFright = false;
+        _currentAlternance = 0;
+        _dotsLefts = _board.DotCount;
+        CurrentGhostState = GhostState.Scatter;
+
+        _textMessage.gameObject.SetActive(true);
+        _textMessage.text = LEVEL_START;
+        _levelStartTime = Time.time;
+        _levelStarted = false;
     }
 
     private void Update()
     {
+        if (_gameOver) return;
+        if (_levelRestarting && Time.time - _levelRestartTime < TimeBeforeRestart) return;
+        if (_levelRestarting)
+        {
+            if (_dotsLefts == 0)
+            {
+                NewLevel();
+            }
+            else
+            {
+                RestartLevel();
+            }
+            _levelRestarting = false;
+            return;
+        }
+
         if (!_levelStarted && Time.time - _levelStartTime < TimeBeforeStart) return;
         if (!_levelStarted)
         {
@@ -89,10 +156,6 @@ public class GameManager : MonoBehaviour
         PositionLogic();
         TimeLogic();
         GhostNextTile();
-        if (Input.GetKeyDown(KeyCode.S)) foreach (Ghost ghost in _ghosts) { ghost.SetGhostState(GhostState.Scatter); }
-        if (Input.GetKeyDown(KeyCode.C)) foreach (Ghost ghost in _ghosts) { ghost.SetGhostState(GhostState.Chase); }
-        if (Input.GetKeyDown(KeyCode.F)) foreach (Ghost ghost in _ghosts) { ghost.SetGhostState(GhostState.Frightened); }
-        if (Input.GetKeyDown(KeyCode.R)) foreach (Ghost ghost in _ghosts) { ghost.SetGhostState(GhostState.Respawning); }
     }
 
     private void PositionLogic()
@@ -103,14 +166,15 @@ public class GameManager : MonoBehaviour
             _pacman.Teleport(_pacmanTile.ConnectedPortal);
             _pacmanTile = _pacmanTile.ConnectedPortal;
         }
+
         if (_pacmanTile.Collectable != null && _pacmanTile.Collectable.gameObject.activeSelf)
         {
-            switch(_pacmanTile.Collectable.Type)
+            switch (_pacmanTile.Collectable.Type)
             {
                 case CollectableType.Dot:
                     _score += 10;
                     _dotsLefts--;
-                    foreach(Ghost ghost in _ghosts)
+                    foreach (Ghost ghost in _ghosts)
                     {
                         if (!ghost.isEnabled && _board.DotCount - _dotsLefts >= ghost.DotsBeforeRelease) ghost.isEnabled = true;
                     }
@@ -131,12 +195,13 @@ public class GameManager : MonoBehaviour
                     }
                     _timeSinceLastFright = Time.time;
                     _timeSinceLastAlternance += _frightDuration;
+                    _ongoingFright = true;
                     _ghostchain = 0;
                     if (_dotsLefts == 0)
                     {
                         _textMessage.gameObject.SetActive(true);
                         _textMessage.text = LEVEL_COMPLETE;
-                        //Restarts the level
+                        _levelRestarting = true;
                     }
                     break;
                 case CollectableType.Fruit:
@@ -147,6 +212,7 @@ public class GameManager : MonoBehaviour
             _scoreValue.text = _score.ToString();
             _pacmanTile.Collectable.gameObject.SetActive(false);
         }
+
         for (int i = 0; i < _ghosts.Length; i++)
         {
             _ghostTiles[i] = _board.GetTile(_ghosts[i].transform.position);
@@ -172,16 +238,19 @@ public class GameManager : MonoBehaviour
                     {
                         _textMessage.gameObject.SetActive(true);
                         _textMessage.text = GAME_OVER;
-                        //GameOver
+
+                        _gameOver = true;
                     }
                     else
                     {
-                        _livesleft -= 1;
+                        _livesleft--;
                         _textMessage.gameObject.SetActive(true);
                         _textMessage.text = LEVEL_RESTART;
                         _livesLeftValue.text = _livesleft.ToString();
-    //RestartLevel
-}
+
+                        _levelRestarting = true;
+                        _levelRestartTime = Time.time;
+                    }
                 }
             }
         }
@@ -189,6 +258,15 @@ public class GameManager : MonoBehaviour
 
     private void TimeLogic()
     {
+        if (_ongoingFright && Time.time - _timeSinceLastFright >= _frightDuration)
+        {
+            foreach (Ghost ghost in _ghosts)
+            {
+                ghost.SetGhostState(CurrentGhostState, true);
+            }
+            _ongoingFright = false;
+        }
+
         if (_permaChase) return;
         if (Time.time - _timeSinceLastAlternance >= _timeBetweenAlternance[_currentAlternance])
         {
@@ -210,14 +288,6 @@ public class GameManager : MonoBehaviour
             }
             if (++_currentAlternance == _timeBetweenAlternance.Length) _permaChase = true;
             _timeSinceLastAlternance = Time.time;
-        }
-
-        if (_ongoingFright && Time.time - _timeSinceLastFright >= _frightDuration)
-        {
-            foreach (Ghost ghost in _ghosts)
-            {
-                ghost.SetGhostState(CurrentGhostState, true);
-            }
         }
     }
 

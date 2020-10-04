@@ -2,8 +2,10 @@
 
 public class Blinky : Ghost
 {
-    private void Start()
+    public override void Initialize()
     {
+        base.Initialize();
+        isEnabled = true;
         CalculateNewPath();
     }
 

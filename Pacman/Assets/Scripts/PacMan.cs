@@ -10,9 +10,36 @@ public class PacMan : MonoBehaviour
     private Tile _previousNode; // last node visited
     [SerializeField]
     private Tile _currentNode; // current node aimed
-    private Tile _nextNode;
 
+    private Tile _nextNode;
     private Vector2 _nextDirection;
+
+    //Restart variables
+    private Vector3 _spawnPosition;
+    private Vector2 _spawnDirection;
+    private Tile _spawnPreviousNode;
+    private Tile _spawnCurrentNode;
+
+    private void Awake()
+    {
+        _spawnPosition = transform.position;
+        _spawnDirection = CurrentDirection;
+        _spawnPreviousNode = _previousNode;
+        _spawnCurrentNode = _currentNode;
+    }
+
+    public void Initialize()
+    {
+        transform.position = _spawnPosition;
+        CurrentDirection = _spawnDirection;
+        _previousNode = _spawnPreviousNode;
+        _currentNode = _spawnCurrentNode;
+
+        _nextNode = null;
+        _nextDirection = Vector2.zero;
+
+        IsCurrentNodeReached = false;
+    }
 
     public void Move()
     {

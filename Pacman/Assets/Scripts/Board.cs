@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Board : MonoBehaviour
+public class Board: MonoBehaviour
 {
     private static int _boardWidth = 28, _boardLength = 31;
     private static Vector2[] _expansionVectors = new Vector2[] { Vector2.left, Vector2.right, Vector2.up, Vector2.down };
@@ -13,7 +13,7 @@ public class Board : MonoBehaviour
     private List<Tile> _nodes;
     private List<Tile> _portals;
 
-    private void Awake()
+    public bool Initialize()
     {
         _board = new Tile[_boardWidth, _boardLength];
         _nodes = new List<Tile>();
@@ -29,14 +29,22 @@ public class Board : MonoBehaviour
             }
             if (tile.Collectable != null && tile.Collectable.Type != CollectableType.Fruit) DotCount++;
         }
-        print("board initialized");
+
+        return true;
+    }
+
+    public void ResetBoard()
+    {
+        foreach(Tile tile in Tiles)
+        {
+            tile.ResetDot();
+        }
     }
 
     public Tile GetTile(Vector2 position)
     {
         return _board[Mathf.FloorToInt(position.x), Mathf.FloorToInt(position.y)];
     }
-
 
     public Tile GetClosestAttainableTile(Vector2 position)
     {
@@ -80,7 +88,6 @@ public class Board : MonoBehaviour
     }
 
     //ASTAR functions
-
     public List<Tile> GetPath(Tile startingTile, Tile endingTile, Tile currentNode = null, Tile previousNode = null)
     {
         foreach (Tile node in _nodes) { node.ResetAstarValues(); }

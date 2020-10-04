@@ -5,8 +5,9 @@ public class Pinky : Ghost
     private Tile _pacmanTile;
     private Vector2 _pacmanDirection;
 
-    private void Start()
+    public override void Initialize()
     {
+        base.Initialize();
         _previousNode = _leavingTiles[0];
         _currentNode = _leavingTiles[1];
         _currentleavingIndex = 1;

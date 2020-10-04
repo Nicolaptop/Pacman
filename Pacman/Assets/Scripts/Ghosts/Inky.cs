@@ -6,8 +6,9 @@ public class Inky : Ghost
     private Vector2 _pacmanDirection;
     private Tile _blinkyTile;
 
-    private void Start()
+    public override void Initialize()
     {
+        base.Initialize();
         _previousNode = _leavingTiles[0];
         _currentNode = _leavingTiles[1];
         _currentleavingIndex = 1;

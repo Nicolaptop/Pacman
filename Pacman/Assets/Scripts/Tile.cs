@@ -22,15 +22,15 @@ public class Tile : MonoBehaviour
     private Vector2[] _pmValidDirections;
 
     // A* Values
-    //[HideInInspector]
+    [HideInInspector]
     public int GCost;
-    //[HideInInspector]
+    [HideInInspector]
     public int HCost;
-    //[HideInInspector]
+    [HideInInspector]
     public int FCost;
-    //[HideInInspector]
+    [HideInInspector]
     public List<Tile> NeighbourTiles; // Used for the start Tile and the end Tile, because we only record nodes for other game purpose 
-    //[HideInInspector]
+    [HideInInspector]
     public Tile ParentTile;
 
     private void Awake()
@@ -53,6 +53,14 @@ public class Tile : MonoBehaviour
         }
     }
 
+    public void ResetDot()
+    {
+        if (Collectable && Collectable.Type != CollectableType.Fruit)
+        {
+            Collectable.gameObject.SetActive(true);
+        }
+    }
+
     public Tile CheckForValidDirection(Vector2 direction)
     {
         for (int i = 0; i < _validDirections.Length; i++)
@@ -66,7 +74,11 @@ public class Tile : MonoBehaviour
         return null;
     }
 
-    public void ReCalculateFCost() { FCost = GCost + HCost; }
+    //Astar Functions
+    public void ReCalculateFCost()
+    {
+        FCost = GCost + HCost;
+    }
 
     public void ResetAstarValues()
     {
