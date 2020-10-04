@@ -22,22 +22,22 @@ public abstract class Ghost : MonoBehaviour
     protected Color _deadColor;
     [SerializeField]
     private SpriteRenderer _ghostRenderer;
+
     [SerializeField]
     private GameManager _gameManager;
     [SerializeField]
     protected Board _board;
 
-    public bool isEnabled;
+    public bool IsEnabled;
     [SerializeField]
     protected bool isLeavingHouse;
-    [SerializeField]
     public GhostState GhostState { get; protected set; } = GhostState.Scatter;
 
     [SerializeField]
     protected Tile[] _leavingTiles; //leaving ghost home path
-    protected int _currentleavingIndex;
     [SerializeField]
     protected Tile[] _scatterPath;
+    protected int _currentleavingIndex;
     protected Tile _currentScatterNode; //The scatter node the ghost is aiming in scatter state
     protected int _currentScatterNodeIndex;
 
@@ -46,6 +46,7 @@ public abstract class Ghost : MonoBehaviour
     protected Tile _previousNode;
     protected Tile _currentNode;
     protected Vector2 _currentDirection;
+
     public bool NeedsTeleportation;
     public bool NeedsNewPath;  // means that the ghost needs a new direction from the pathfinding algorithm
     private bool _noPreviousPath;
@@ -54,18 +55,23 @@ public abstract class Ghost : MonoBehaviour
 
     public virtual void Initialize() //Called at the start and restart of every level
     {
-        _currentScatterNodeIndex = 0;
-        _currentleavingIndex = 0;
-        _currentScatterNode = _scatterPath[_currentScatterNodeIndex];
+        transform.position = _spawnPosition;
         GhostState = GhostState.Scatter;
+
         _previousNode = null;
         _currentNode = null;
         _currentDirection = Vector2.zero;
+        _currentScatterNode = _scatterPath[_currentScatterNodeIndex];
+        _currentScatterNodeIndex = 0;
+        _currentleavingIndex = 0;
         NeedsTeleportation = false;
         NeedsNewPath = false;
         _noPreviousPath = false;
-        transform.position = _spawnPosition;
+        IsEnabled = false;
+
+        SetGhostStateVisual();
     }
+
     private void Awake()
     {
         _spawnPosition = transform.position;
@@ -74,13 +80,29 @@ public abstract class Ghost : MonoBehaviour
 
     public void Move(Tile ghostTile)
     {
-        if (!isEnabled) return;
+        if (!IsEnabled) return;
         if (GhostState == GhostState.Respawning && ghostTile == _leavingTiles[_leavingTiles.Length - 1] && _previousNode != ghostTile) // Check for returning to ghosthome
         {
             _currentNode = ghostTile;
             _currentleavingIndex = _leavingTiles.Length - 1;
         }
-        transform.position += (Vector3)(_currentDirection * BaseSpeed) * Time.deltaTime;
+
+        float actualSpeed = BaseSpeed;
+        if (ghostTile.TileType == TileType.TunnelPath)
+        {
+            actualSpeed = 0.55f * BaseSpeed;
+        }
+        if (GhostState == GhostState.Respawning)
+        {
+                actualSpeed = 2 * BaseSpeed;
+        }
+        if (GhostState == GhostState.Frightened)
+        {
+            actualSpeed = 0.65f * BaseSpeed;
+        }
+
+        transform.position += (Vector3)(_currentDirection * actualSpeed) * Time.deltaTime;
+
         if (CheckOverShot()) // Ghost overshot its target Node
         {
             transform.position = _currentNode.transform.position;
@@ -107,7 +129,7 @@ public abstract class Ghost : MonoBehaviour
 
             switch (GhostState)
             {
-                case GhostState.Scatter:  
+                case GhostState.Scatter:
                     if (_currentNode == _currentScatterNode) // Ghost is in a patrol movement
                     {
                         _previousNode = _currentNode;
@@ -234,6 +256,8 @@ public abstract class Ghost : MonoBehaviour
     protected void DetermineDirection()
     {
         _currentDirection = GameManager.GetNormalizedVector(_currentNode, _previousNode);
+        if (_currentDirection.x != 0 && _currentDirection.y != 0)
+            Debug.LogError("Diagonale !", gameObject);
     }
 
     public void Teleport(Tile tile)
@@ -306,11 +330,25 @@ public abstract class Ghost : MonoBehaviour
                 break;
 
             case GhostState.Frightened:
-                var possibleNodes = _board.GetNodesSurronding(startingTile);
-                int randomNumber = UnityEngine.Random.Range(0, possibleNodes.Count);
-                _previousNode = possibleNodes[randomNumber];
-                _currentNode = possibleNodes[1 - randomNumber];
-                DetermineDirection();
+                int randomNumber;
+
+                if (startingTile.TileType == TileType.Node)
+                {
+                    var possibleNodes = startingTile.NeighboorNodes;
+                    randomNumber = UnityEngine.Random.Range(0, possibleNodes.Length);
+                    _previousNode = startingTile;
+                    _currentNode = possibleNodes[randomNumber];
+                    DetermineDirection();
+                }
+                else
+                {
+                    var surrondingNodes = _board.GetNodesSurronding(startingTile);
+                    randomNumber = UnityEngine.Random.Range(0, surrondingNodes.Count);
+                    _previousNode = surrondingNodes[randomNumber];
+                    _currentNode = surrondingNodes[1 - randomNumber];
+                    DetermineDirection();
+                }
+
                 break;
         }
         _noPreviousPath = false;
@@ -359,7 +397,7 @@ public abstract class Ghost : MonoBehaviour
 
     private void ReverseDirection()
     {
-        if (isEnabled && !isLeavingHouse) // Goes in reverse direction if not in the house or leaving it
+        if (IsEnabled && !isLeavingHouse) // Goes in reverse direction if not in the house or leaving it
         {
             Tile tmpNode = _previousNode;
             _previousNode = _currentNode;

@@ -11,6 +11,7 @@ public class Clyde : Ghost
         _previousNode = _leavingTiles[0];
         _currentNode = _leavingTiles[1];
         _currentleavingIndex = 1;
+        isLeavingHouse = true;
 
         DetermineDirection();
     }

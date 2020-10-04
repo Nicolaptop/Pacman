@@ -38,33 +38,45 @@ public class GameManager : MonoBehaviour
     private int _livesleft = 2;
     private int _ghostchain = 0;
 
-    private static string LEVEL_START = "Ready ?";
-    private static string LEVEL_COMPLETE = "Level Complete !";
-    private static string LEVEL_RESTART = "Lost a life ! Restarting...";
-    private static string GAME_OVER = "Game Over";
+    private static string _LEVEL_START = "Ready ?";
+    private static string _LEVEL_COMPLETE = "Level Complete !";
+    private static string _LEVEL_RESTART = "Lost a life ! Restarting...";
+    private static string _GAME_OVER = "Game Over";
 
     //Ghost State Change Logic
     [SerializeField]
     private int _frightDuration;
     [SerializeField]
     private float[] _timeBetweenAlternance;
+
     private int _currentAlternance;
     private float _timeSinceLastAlternance;
     private float _timeSinceLastFright;
     private bool _permaChase;
     private bool _ongoingFright;
 
-    private IEnumerator Start()
-    {
-        _board.Initialize();
+    //Bonus Logic
+    [SerializeField]
+    private int[] _dotsBonusTrigger;
+    [SerializeField]
+    private float _bonusDuration;
+    private float _timesinceLastBonus;
+    private int _currentBonusIndex;
 
-        yield return new WaitForSeconds(3);
+    [SerializeField]
+    private Button _restartButton;
+
+    private void Start()
+    {
         _ghostTiles = new Tile[_ghosts.Length];
+        _restartButton.onClick.AddListener(NewGame);
         NewGame();
     }
 
     private void NewGame()
     {
+        _restartButton.gameObject.SetActive(false);
+        _gameOver = false;
         _score = 0;
         _scoreValue.text = _score.ToString();
         _livesleft = 2;
@@ -90,9 +102,13 @@ public class GameManager : MonoBehaviour
         CurrentGhostState = GhostState.Scatter;
 
         _textMessage.gameObject.SetActive(true);
-        _textMessage.text = LEVEL_START;
+        _textMessage.text = _LEVEL_START;
         _levelStartTime = Time.time;
         _levelStarted = false;
+
+        _currentBonusIndex = 0;
+        _timesinceLastBonus = 0;
+        _board.BonusTile.Collectable.gameObject.SetActive(false);
     }
 
     private void RestartLevel()
@@ -108,13 +124,15 @@ public class GameManager : MonoBehaviour
         _permaChase = false;
         _ongoingFright = false;
         _currentAlternance = 0;
-        _dotsLefts = _board.DotCount;
         CurrentGhostState = GhostState.Scatter;
 
         _textMessage.gameObject.SetActive(true);
-        _textMessage.text = LEVEL_START;
+        _textMessage.text = _LEVEL_START;
         _levelStartTime = Time.time;
         _levelStarted = false;
+
+        _timesinceLastBonus = 0;
+        _board.BonusTile.Collectable.gameObject.SetActive(false);
     }
 
     private void Update()
@@ -139,7 +157,6 @@ public class GameManager : MonoBehaviour
         if (!_levelStarted)
         {
             _textMessage.gameObject.SetActive(false);
-            _dotsLefts = _board.DotCount;
             _levelStarted = true;
             _currentAlternance = 0;
             _timeSinceLastAlternance = Time.time;
@@ -174,38 +191,65 @@ public class GameManager : MonoBehaviour
                 case CollectableType.Dot:
                     _score += 10;
                     _dotsLefts--;
-                    foreach (Ghost ghost in _ghosts)
-                    {
-                        if (!ghost.isEnabled && _board.DotCount - _dotsLefts >= ghost.DotsBeforeRelease) ghost.isEnabled = true;
-                    }
+
                     if (_dotsLefts == 0)
                     {
                         _textMessage.gameObject.SetActive(true);
-                        _textMessage.text = LEVEL_COMPLETE;
-                        //Restarts the level
+                        _textMessage.text = _LEVEL_COMPLETE;
+                        _levelRestarting = true;
+                        _levelRestartTime = Time.time;
+                        return;
+                    }
+
+                    foreach (Ghost ghost in _ghosts)
+                    {
+                        if (!ghost.IsEnabled && _board.DotCount - _dotsLefts >= ghost.DotsBeforeRelease) ghost.IsEnabled = true;
+                    }
+
+                    if (_currentBonusIndex < _dotsBonusTrigger.Length && _board.DotCount - _dotsLefts == _dotsBonusTrigger[_currentBonusIndex])
+                    {
+                        _board.BonusTile.Collectable.gameObject.SetActive(true);
+                        _timesinceLastBonus = Time.time;
+                        _currentBonusIndex++;
                     }
                     break;
+
                 case CollectableType.Energizer:
                     _score += 50;
                     _dotsLefts--;
+
+                    if (_dotsLefts == 0)
+                    {
+                        _textMessage.gameObject.SetActive(true);
+                        _textMessage.text = _LEVEL_COMPLETE;
+                        _levelRestarting = true;
+                        _levelRestartTime = Time.time;
+                        return;
+                    }
+
                     foreach (Ghost ghost in _ghosts)
                     {
-                        if (!ghost.isEnabled && _board.DotCount - _dotsLefts >= ghost.DotsBeforeRelease) ghost.isEnabled = true;
+                        if (!ghost.IsEnabled && _board.DotCount - _dotsLefts >= ghost.DotsBeforeRelease) ghost.IsEnabled = true;
                         ghost.SetGhostState(GhostState.Frightened);
                     }
+
+                    if (_currentBonusIndex < _dotsBonusTrigger.Length && _board.DotCount - _dotsLefts == _dotsBonusTrigger[_currentBonusIndex])
+                    {
+                        _board.BonusTile.Collectable.gameObject.SetActive(true);
+                        _timesinceLastBonus = Time.time;
+                        _currentBonusIndex++;
+                    }
+
                     _timeSinceLastFright = Time.time;
                     _timeSinceLastAlternance += _frightDuration;
                     _ongoingFright = true;
                     _ghostchain = 0;
-                    if (_dotsLefts == 0)
-                    {
-                        _textMessage.gameObject.SetActive(true);
-                        _textMessage.text = LEVEL_COMPLETE;
-                        _levelRestarting = true;
-                    }
                     break;
-                case CollectableType.Fruit:
+
+                case CollectableType.Bonus:
                     _score += 100;
+                    _board.BonusTile.Collectable.gameObject.SetActive(false);
+                    _timesinceLastBonus = 0f;
                     break;
             }
 
@@ -237,15 +281,16 @@ public class GameManager : MonoBehaviour
                     if (_livesleft == 0)
                     {
                         _textMessage.gameObject.SetActive(true);
-                        _textMessage.text = GAME_OVER;
+                        _textMessage.text = _GAME_OVER;
 
                         _gameOver = true;
+                        _restartButton.gameObject.SetActive(true);
                     }
                     else
                     {
                         _livesleft--;
                         _textMessage.gameObject.SetActive(true);
-                        _textMessage.text = LEVEL_RESTART;
+                        _textMessage.text = _LEVEL_RESTART;
                         _livesLeftValue.text = _livesleft.ToString();
 
                         _levelRestarting = true;
@@ -265,6 +310,12 @@ public class GameManager : MonoBehaviour
                 ghost.SetGhostState(CurrentGhostState, true);
             }
             _ongoingFright = false;
+        }
+
+        if (_timesinceLastBonus > 0 && Time.time - _timesinceLastBonus > _bonusDuration)
+        {
+            _board.BonusTile.Collectable.gameObject.SetActive(false);
+            _timesinceLastBonus = 0;
         }
 
         if (_permaChase) return;

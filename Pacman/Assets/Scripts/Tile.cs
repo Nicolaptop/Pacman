@@ -55,7 +55,7 @@ public class Tile : MonoBehaviour
 
     public void ResetDot()
     {
-        if (Collectable && Collectable.Type != CollectableType.Fruit)
+        if (Collectable && Collectable.Type != CollectableType.Bonus)
         {
             Collectable.gameObject.SetActive(true);
         }

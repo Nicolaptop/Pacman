@@ -5,7 +5,8 @@ public class Blinky : Ghost
     public override void Initialize()
     {
         base.Initialize();
-        isEnabled = true;
+        IsEnabled = true;
+        isLeavingHouse = false;
         CalculateNewPath();
     }
 

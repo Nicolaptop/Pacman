@@ -1,41 +1,52 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Board: MonoBehaviour
+public class Board : MonoBehaviour
 {
-    private static int _boardWidth = 28, _boardLength = 31;
-    private static Vector2[] _expansionVectors = new Vector2[] { Vector2.left, Vector2.right, Vector2.up, Vector2.down };
+    private static int _BOARDWIDTH = 28, _BOARDLENGTH = 31;
+    private static Vector2[] _EXPANSIONVECTORS = new Vector2[] { Vector2.left, Vector2.right, Vector2.up, Vector2.down };
 
     public Tile[] Tiles;
     public int DotCount;
+    public Tile BonusTile;
 
-    private Tile[,] _board = new Tile[_boardWidth, _boardLength];
+    private Tile[,] _board = new Tile[_BOARDWIDTH, _BOARDLENGTH];
     private List<Tile> _nodes;
     private List<Tile> _portals;
 
-    public bool Initialize()
+    private void Awake()
     {
-        _board = new Tile[_boardWidth, _boardLength];
+        _board = new Tile[_BOARDWIDTH, _BOARDLENGTH];
         _nodes = new List<Tile>();
         _portals = new List<Tile>();
         foreach (Tile tile in Tiles)
         {
             _board[(int)tile.transform.position.x, (int)tile.transform.position.y] = tile;
-            if (tile.TileType == TileType.Node) _nodes.Add(tile);
+
+            if (tile.TileType == TileType.Node)
+            {
+                _nodes.Add(tile);
+            }
             if (tile.TileType == TileType.Portal)
             {
                 _nodes.Add(tile);
                 _portals.Add(tile);
             }
-            if (tile.Collectable != null && tile.Collectable.Type != CollectableType.Fruit) DotCount++;
-        }
 
-        return true;
+            if (tile.Collectable != null && tile.Collectable.Type != CollectableType.Bonus)
+            {
+                DotCount++;
+            }
+            if (tile.Collectable != null && tile.Collectable.Type == CollectableType.Bonus)
+            {
+                BonusTile = tile;
+            }
+        }
     }
 
     public void ResetBoard()
     {
-        foreach(Tile tile in Tiles)
+        foreach (Tile tile in Tiles)
         {
             tile.ResetDot();
         }
@@ -43,13 +54,13 @@ public class Board: MonoBehaviour
 
     public Tile GetTile(Vector2 position)
     {
-        return _board[Mathf.FloorToInt(position.x), Mathf.FloorToInt(position.y)];
+        return _board[Mathf.RoundToInt(position.x), Mathf.RoundToInt(position.y)];
     }
 
     public Tile GetClosestAttainableTile(Vector2 position)
     {
-        int closestXPosition = Mathf.Max(0, Mathf.Min(Mathf.FloorToInt(position.x), _boardWidth - 1));
-        int closestYPosition = Mathf.Max(0, Mathf.Min(Mathf.FloorToInt(position.y), _boardLength - 1));
+        int closestXPosition = Mathf.Max(0, Mathf.Min(Mathf.FloorToInt(position.x), _BOARDWIDTH - 1));
+        int closestYPosition = Mathf.Max(0, Mathf.Min(Mathf.FloorToInt(position.y), _BOARDLENGTH - 1));
         Tile closestTile = _board[closestXPosition, closestYPosition];
 
         if (closestTile.TileType > 0) return closestTile;
@@ -81,9 +92,9 @@ public class Board: MonoBehaviour
     {
         List<Tile> list = new List<Tile>();
         if (X > 0) list.Add(_board[X - 1, Y]);
-        if (X < _boardWidth - 1) list.Add(_board[X + 1, Y]);
+        if (X < _BOARDWIDTH - 1) list.Add(_board[X + 1, Y]);
         if (Y > 0) list.Add(_board[X, Y - 1]);
-        if (Y < _boardLength - 1) list.Add(_board[X, Y + 1]);
+        if (Y < _BOARDLENGTH - 1) list.Add(_board[X, Y + 1]);
         return list;
     }
 
@@ -180,16 +191,16 @@ public class Board: MonoBehaviour
         Vector2 tmpPosition;
         Tile tmpTile;
 
-        for (int i = 0; i < _expansionVectors.Length; i++)
+        for (int i = 0; i < _EXPANSIONVECTORS.Length; i++)
         {
-            tmpPosition = boardPosition + _expansionVectors[i];
+            tmpPosition = boardPosition + _EXPANSIONVECTORS[i];
             tmpTile = GetTile(tmpPosition);
             if (tmpTile.TileType != TileType.Obstacle)
             {
                 int j = 1;
                 while ((int)tmpTile.TileType < 3)
                 {
-                    tmpPosition += _expansionVectors[i];
+                    tmpPosition += _EXPANSIONVECTORS[i];
                     tmpTile = GetTile(tmpPosition);
                     j++;
                 }
@@ -206,7 +217,7 @@ public class Board: MonoBehaviour
         return (int)Mathf.Abs(distAB.x) + (int)Mathf.Abs(distAB.y);
     }
 
-    private int CalculateHCost(Tile a, Tile b) // This check of the portal heuristic is top make sure going through a portal that seems farther isnt in fact faster
+    private int CalculateHCost(Tile a, Tile b) // This check of the portal heuristic is to make sure going through a portal that seems farther isnt in fact faster
     {
         int minDistance = CalculateDistance(a, b);
         foreach (Tile portal in _portals)

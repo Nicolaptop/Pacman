@@ -99,7 +99,7 @@ MonoBehaviour:
   NeighboorNodes: []
   PMNeighboorNodes: []
   ConnectedPortal: {fileID: 0}
-  collectable: {fileID: 0}
+  Collectable: {fileID: 0}
   GCost: 0
   HCost: 0
   FCost: 0

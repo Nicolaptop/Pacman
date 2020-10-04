@@ -54,7 +54,9 @@ public class PacMan : MonoBehaviour
             _nextNode = null;
             IsCurrentNodeReached = false;
         }
+
         transform.position += (Vector3)(CurrentDirection * BaseSpeed) * Time.deltaTime;
+
         if (CheckOverShot()) // Pacman overshot his target Node
         {
             IsCurrentNodeReached = true;
@@ -79,6 +81,7 @@ public class PacMan : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.RightArrow)) wishedDirection = Vector2.right;
         if (Input.GetKeyDown(KeyCode.UpArrow)) wishedDirection = Vector2.up;
         if (Input.GetKeyDown(KeyCode.DownArrow)) wishedDirection = Vector2.down;
+
         if (wishedDirection != Vector2.zero && wishedDirection != CurrentDirection)
         {
             if (wishedDirection == -1 * CurrentDirection) //opposite direction
@@ -92,6 +95,7 @@ public class PacMan : MonoBehaviour
                 _nextNode = null;
                 return;
             }
+
             Tile nextNode = _currentNode.CheckForValidDirection(wishedDirection);
             if (nextNode != null)
             {
