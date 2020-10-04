@@ -2916,15 +2916,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d998452f23ac0644e8151b60ae55ee09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BaseSpeed: 6.5
+  _gameManager: {fileID: 1950787108}
+  _board: {fileID: 775086902}
   _baseColor: {r: 1, g: 0.7294118, b: 0.38039216, a: 1}
   _frightColor: {r: 0.1254902, g: 0.14117648, b: 0.9647059, a: 1}
   _deadColor: {r: 1, g: 1, b: 1, a: 1}
   _ghostRenderer: {fileID: 91009507}
-  _gameManager: {fileID: 1950787108}
-  _board: {fileID: 775086902}
+  DotsBeforeRelease: 90
   IsEnabled: 0
-  isLeavingHouse: 1
+  _baseSpeed: 6.5
   _leavingTiles:
   - {fileID: 1284797104}
   - {fileID: 419187097}
@@ -2939,7 +2939,6 @@ MonoBehaviour:
   - {fileID: 295944853}
   - {fileID: 939049431}
   - {fileID: 530039953}
-  DotsBeforeRelease: 20
   NeedsTeleportation: 0
   NeedsNewPath: 0
 --- !u!212 &91009507
@@ -11752,15 +11751,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7268f78674735764aab89699eed68b75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BaseSpeed: 6.5
+  _gameManager: {fileID: 1950787108}
+  _board: {fileID: 775086902}
   _baseColor: {r: 1, g: 0, b: 0, a: 1}
   _frightColor: {r: 0.1254902, g: 0.14117648, b: 0.96470594, a: 1}
   _deadColor: {r: 1, g: 1, b: 1, a: 1}
   _ghostRenderer: {fileID: 385504997}
-  _gameManager: {fileID: 1950787108}
-  _board: {fileID: 775086902}
+  DotsBeforeRelease: 0
   IsEnabled: 0
-  isLeavingHouse: 0
+  _baseSpeed: 6.5
   _leavingTiles:
   - {fileID: 419187097}
   - {fileID: 987451053}
@@ -11769,7 +11768,6 @@ MonoBehaviour:
   - {fileID: 975501384}
   - {fileID: 1480424001}
   - {fileID: 308434717}
-  DotsBeforeRelease: 0
   NeedsTeleportation: 0
   NeedsNewPath: 0
 --- !u!1001 &388230365
@@ -14106,7 +14104,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -75.98}
+  m_AnchoredPosition: {x: 0, y: -100}
   m_SizeDelta: {x: 100, y: 43.32361}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &462847982
@@ -16273,15 +16271,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bdf46f632cedefa4db65f15d5aa86e86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BaseSpeed: 6.5
+  _gameManager: {fileID: 1950787108}
+  _board: {fileID: 775086902}
   _baseColor: {r: 0, g: 0.99607843, b: 0.99607843, a: 1}
   _frightColor: {r: 0.1254902, g: 0.14117648, b: 0.9647059, a: 1}
   _deadColor: {r: 1, g: 1, b: 1, a: 1}
   _ghostRenderer: {fileID: 539165712}
-  _gameManager: {fileID: 1950787108}
-  _board: {fileID: 775086902}
+  DotsBeforeRelease: 30
   IsEnabled: 0
-  isLeavingHouse: 1
+  _baseSpeed: 6.5
   _leavingTiles:
   - {fileID: 52986868}
   - {fileID: 419187097}
@@ -16296,7 +16294,6 @@ MonoBehaviour:
   - {fileID: 1137024368}
   - {fileID: 1257123582}
   - {fileID: 1607269343}
-  DotsBeforeRelease: 10
   NeedsTeleportation: 0
   NeedsNewPath: 0
 --- !u!212 &539165712
@@ -18831,7 +18828,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &587951734
 RectTransform:
   m_ObjectHideFlags: 0
@@ -19021,15 +19018,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a53be87102cb3b4ca50d83b9a0c541a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BaseSpeed: 6.5
+  _gameManager: {fileID: 1950787108}
+  _board: {fileID: 775086902}
   _baseColor: {r: 1, g: 0.7254902, b: 0.9843137, a: 1}
   _frightColor: {r: 0.1254902, g: 0.14117648, b: 0.9647059, a: 1}
   _deadColor: {r: 1, g: 1, b: 1, a: 1}
   _ghostRenderer: {fileID: 594730329}
-  _gameManager: {fileID: 1950787108}
-  _board: {fileID: 775086902}
+  DotsBeforeRelease: 0
   IsEnabled: 0
-  isLeavingHouse: 1
+  _baseSpeed: 6.5
   _leavingTiles:
   - {fileID: 419187097}
   - {fileID: 987451053}
@@ -19038,7 +19035,6 @@ MonoBehaviour:
   - {fileID: 1631954284}
   - {fileID: 165737941}
   - {fileID: 1876939565}
-  DotsBeforeRelease: 0
   NeedsTeleportation: 0
   NeedsNewPath: 0
 --- !u!212 &594730329
@@ -60063,7 +60059,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 30}
+  m_AnchoredPosition: {x: -50, y: 30}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &1843705678
@@ -63335,9 +63331,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a6c2892cb771c40a000a621f5b91e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TimeBeforeStart: 2
-  TimeBeforeRestart: 3
-  CurrentGhostState: 0
   _board: {fileID: 775086902}
   _pacman: {fileID: 192909980}
   _ghosts:
@@ -63348,7 +63341,12 @@ MonoBehaviour:
   _scoreValue: {fileID: 36224570}
   _livesLeftValue: {fileID: 1483165455}
   _textMessage: {fileID: 462847982}
+  _restartButton: {fileID: 587951735}
+  CurrentGhostState: 0
+  _timeBeforeStart: 3
+  _timeBeforeRestart: 3
   _frightDuration: 6
+  _bonusDuration: 10
   _timeBetweenAlternance:
   - 7
   - 20
@@ -63357,9 +63355,7 @@ MonoBehaviour:
   - 5
   - 20
   - 5
-  _dotsBonusTrigger: 0a0000001e000000
-  _bonusDuration: 5
-  _restartButton: {fileID: 587951735}
+  _dotsBonusTrigger: 46000000aa000000
 --- !u!1001 &1956634251
 PrefabInstance:
   m_ObjectHideFlags: 0

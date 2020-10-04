@@ -3,8 +3,9 @@
 public class PacMan : MonoBehaviour
 {
     public float BaseSpeed;
-    public bool IsCurrentNodeReached;
     public Vector2 CurrentDirection;
+    [HideInInspector]
+    public bool IsCurrentNodeReached;
 
     [SerializeField]
     private Tile _previousNode; // last node visited
@@ -95,7 +96,7 @@ public class PacMan : MonoBehaviour
                 _nextNode = null;
                 return;
             }
-
+        
             Tile nextNode = _currentNode.CheckForValidDirection(wishedDirection);
             if (nextNode != null)
             {

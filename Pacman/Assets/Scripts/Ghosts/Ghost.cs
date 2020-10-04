@@ -12,8 +12,13 @@ public enum GhostState
 
 public abstract class Ghost : MonoBehaviour
 {
-    public float BaseSpeed;
+    [Header("Game references")]
+    [SerializeField]
+    private GameManager _gameManager;
+    [SerializeField]
+    protected Board _board;
 
+    [Header("Visual")]
     [SerializeField]
     protected Color _baseColor;
     [SerializeField]
@@ -23,16 +28,17 @@ public abstract class Ghost : MonoBehaviour
     [SerializeField]
     private SpriteRenderer _ghostRenderer;
 
-    [SerializeField]
-    private GameManager _gameManager;
-    [SerializeField]
-    protected Board _board;
-
+    [Header("Game Values")]
+    public int DotsBeforeRelease;
+    [HideInInspector]
     public bool IsEnabled;
-    [SerializeField]
-    protected bool isLeavingHouse;
+    [HideInInspector]
     public GhostState GhostState { get; protected set; } = GhostState.Scatter;
+    [SerializeField]
+    private float _baseSpeed;
+    protected bool isLeavingHouse;
 
+    [Header("Fixed Paths")]
     [SerializeField]
     protected Tile[] _leavingTiles; //leaving ghost home path
     [SerializeField]
@@ -41,22 +47,29 @@ public abstract class Ghost : MonoBehaviour
     protected Tile _currentScatterNode; //The scatter node the ghost is aiming in scatter state
     protected int _currentScatterNodeIndex;
 
-    public int DotsBeforeRelease;
-
     protected Tile _previousNode;
     protected Tile _currentNode;
     protected Vector2 _currentDirection;
 
+    [HideInInspector]
     public bool NeedsTeleportation;
+    [HideInInspector]
     public bool NeedsNewPath;  // means that the ghost needs a new direction from the pathfinding algorithm
     private bool _noPreviousPath;
 
     private Vector3 _spawnPosition;
 
+    private void Awake()
+    {
+        _spawnPosition = transform.position;
+        _currentScatterNode = _scatterPath[_currentScatterNodeIndex];
+    }
+
     public virtual void Initialize() //Called at the start and restart of every level
     {
         transform.position = _spawnPosition;
         GhostState = GhostState.Scatter;
+        IsEnabled = false;
 
         _previousNode = null;
         _currentNode = null;
@@ -67,15 +80,8 @@ public abstract class Ghost : MonoBehaviour
         NeedsTeleportation = false;
         NeedsNewPath = false;
         _noPreviousPath = false;
-        IsEnabled = false;
 
         SetGhostStateVisual();
-    }
-
-    private void Awake()
-    {
-        _spawnPosition = transform.position;
-        _currentScatterNode = _scatterPath[_currentScatterNodeIndex];
     }
 
     public void Move(Tile ghostTile)
@@ -87,18 +93,18 @@ public abstract class Ghost : MonoBehaviour
             _currentleavingIndex = _leavingTiles.Length - 1;
         }
 
-        float actualSpeed = BaseSpeed;
+        float actualSpeed = _baseSpeed;
         if (ghostTile.TileType == TileType.TunnelPath)
         {
-            actualSpeed = 0.55f * BaseSpeed;
+            actualSpeed = 0.55f * _baseSpeed;
         }
         if (GhostState == GhostState.Respawning)
         {
-                actualSpeed = 2 * BaseSpeed;
+                actualSpeed = 2 * _baseSpeed;
         }
         if (GhostState == GhostState.Frightened)
         {
-            actualSpeed = 0.65f * BaseSpeed;
+            actualSpeed = 0.65f * _baseSpeed;
         }
 
         transform.position += (Vector3)(_currentDirection * actualSpeed) * Time.deltaTime;
@@ -123,8 +129,7 @@ public abstract class Ghost : MonoBehaviour
                     _currentNode = _leavingTiles[_currentleavingIndex];
                     DetermineDirection();
                     return;
-                }
-
+                }   
             }
 
             switch (GhostState)
@@ -136,6 +141,7 @@ public abstract class Ghost : MonoBehaviour
                         _currentScatterNodeIndex = (_currentScatterNodeIndex + 1) % _scatterPath.Length;
                         _currentScatterNode = _scatterPath[_currentScatterNodeIndex];
                         _currentNode = _currentScatterNode;
+                        DetermineDirection();
                     }
                     else // Ghost returns to his patrol path
                     {
@@ -158,7 +164,6 @@ public abstract class Ghost : MonoBehaviour
                             else NeedsNewPath = true;
                         }
                     }
-                    DetermineDirection();
                     break;
 
                 case GhostState.Chase:
@@ -260,6 +265,17 @@ public abstract class Ghost : MonoBehaviour
             Debug.LogError("Diagonale !", gameObject);
     }
 
+    private void Respawn()
+    {
+        GhostState = _gameManager.CurrentGhostState;
+        _previousNode = _leavingTiles[0];
+        _currentNode = _leavingTiles[1];
+        _currentleavingIndex = 1;
+        isLeavingHouse = true;
+        DetermineDirection();
+        SetGhostStateVisual();
+    }
+
     public void Teleport(Tile tile)
     {
         transform.position = tile.transform.position;
@@ -356,17 +372,6 @@ public abstract class Ghost : MonoBehaviour
     }
 
     protected abstract Tile DetermineNextTarget(object[] args);
-
-    private void Respawn()
-    {
-        GhostState = _gameManager.CurrentGhostState;
-        _previousNode = _leavingTiles[0];
-        _currentNode = _leavingTiles[1];
-        _currentleavingIndex = 1;
-        isLeavingHouse = true;
-        DetermineDirection();
-        SetGhostStateVisual();
-    }
 
     public void SetGhostState(GhostState state, bool endOfFright = false)
     {

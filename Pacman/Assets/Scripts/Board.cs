@@ -7,7 +7,9 @@ public class Board : MonoBehaviour
     private static Vector2[] _EXPANSIONVECTORS = new Vector2[] { Vector2.left, Vector2.right, Vector2.up, Vector2.down };
 
     public Tile[] Tiles;
+    [HideInInspector]
     public int DotCount;
+    [HideInInspector]
     public Tile BonusTile;
 
     private Tile[,] _board = new Tile[_BOARDWIDTH, _BOARDLENGTH];

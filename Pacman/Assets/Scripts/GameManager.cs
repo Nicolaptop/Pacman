@@ -1,28 +1,33 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    public float TimeBeforeStart;
-    public float TimeBeforeRestart;
-    public GhostState CurrentGhostState;
+    private static string _LEVEL_START = "Ready ?";
+    private static string _LEVEL_COMPLETE = "Level Complete !";
+    private static string _LEVEL_RESTART = "Lost a life ! Restarting...";
+    private static string _GAME_OVER = "Game Over";
 
+    [Header("Game references")]
     [SerializeField]
     private Board _board = default;
-
     [SerializeField]
     private PacMan _pacman = default;
     [SerializeField]
     private Ghost[] _ghosts = default;
 
+    [Header("UI references")]
     [SerializeField]
     private Text _scoreValue = default;
     [SerializeField]
     private Text _livesLeftValue = default;
     [SerializeField]
     private Text _textMessage = default;
+    [SerializeField]
+    private Button _restartButton;
 
+    [HideInInspector]
+    public GhostState CurrentGhostState;
     private float _levelStartTime;
     private float _levelRestartTime;
     private bool _levelStarted = false;
@@ -38,33 +43,27 @@ public class GameManager : MonoBehaviour
     private int _livesleft = 2;
     private int _ghostchain = 0;
 
-    private static string _LEVEL_START = "Ready ?";
-    private static string _LEVEL_COMPLETE = "Level Complete !";
-    private static string _LEVEL_RESTART = "Lost a life ! Restarting...";
-    private static string _GAME_OVER = "Game Over";
-
-    //Ghost State Change Logic
+    [Header("Time Management")]
+    [SerializeField]
+    private float _timeBeforeStart;
+    [SerializeField]
+    private float _timeBeforeRestart;
     [SerializeField]
     private int _frightDuration;
     [SerializeField]
+    private float _bonusDuration;
+    [SerializeField]
     private float[] _timeBetweenAlternance;
-
-    private int _currentAlternance;
-    private float _timeSinceLastAlternance;
-    private float _timeSinceLastFright;
-    private bool _permaChase;
-    private bool _ongoingFright;
-
-    //Bonus Logic
     [SerializeField]
     private int[] _dotsBonusTrigger;
-    [SerializeField]
-    private float _bonusDuration;
-    private float _timesinceLastBonus;
-    private int _currentBonusIndex;
 
-    [SerializeField]
-    private Button _restartButton;
+    private bool _permaChase;
+    private int _currentAlternance;
+    private float _timeSinceLastAlternance;
+    private bool _ongoingFright;
+    private float _timeSinceLastFright;
+    private int _currentBonusIndex;
+    private float _timesinceLastBonus;
 
     private void Start()
     {
@@ -138,7 +137,7 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
         if (_gameOver) return;
-        if (_levelRestarting && Time.time - _levelRestartTime < TimeBeforeRestart) return;
+        if (_levelRestarting && Time.time - _levelRestartTime < _timeBeforeRestart) return;
         if (_levelRestarting)
         {
             if (_dotsLefts == 0)
@@ -153,7 +152,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (!_levelStarted && Time.time - _levelStartTime < TimeBeforeStart) return;
+        if (!_levelStarted && Time.time - _levelStartTime < _timeBeforeStart) return;
         if (!_levelStarted)
         {
             _textMessage.gameObject.SetActive(false);
